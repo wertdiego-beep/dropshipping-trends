@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Producto {
+  id                String          @id @default(cuid())
+  nombre            String
+  tiktokVideoUrl    String?
+  tiktokVideoId     String?
+  tiktokVistas      Int             @default(0)
+  precioProveedor   Float?
+  proveedorUrl      String?
+  proveedorNombre   String          @default("AliExpress")
+  metaAnunciosCount Int             @default(0)
+  imagen            String?
+  categoria         String?
+  activo            Boolean         @default(true)
+  creadoEn          DateTime        @default(now())
+  actualizadoEn     DateTime        @updatedAt
+  metricas          MetricaDiaria[]
+
+  @@index([creadoEn])
+  @@index([activo])
+}
+
+model MetricaDiaria {
+  id              String   @id @default(cuid())
+  productoId      String
+  fecha           DateTime @default(now())
+  tiktokVistas    Int      @default(0)
+  googleTrends    Int      @default(0)
+  metaAnuncios    Int      @default(0)
+  precioProveedor Float?
+  producto        Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  @@unique([productoId, fecha])
+  @@index([productoId])
+  @@index([fecha])
+}

@@ -1,0 +1,31 @@
+name: Daily Scraper
+
+on:
+  schedule:
+    - cron: "0 10 * * *"  # 6AM hora Argentina (UTC-3 → 10AM UTC)
+  workflow_dispatch:        # permite correrlo manualmente desde GitHub
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run daily scraper
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TIKTOK_COOKIE: ${{ secrets.TIKTOK_COOKIE }}
+        run: npx ts-node --esm jobs/daily.ts
