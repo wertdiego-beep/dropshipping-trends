@@ -1,18 +1,14 @@
 "use client";
 
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from "recharts";
 import type { MetricaDiaria } from "@/lib/types";
 
 interface Props {
   metricas: MetricaDiaria[];
+  nombre: string;
 }
 
 function formatFecha(iso: string) {
@@ -26,84 +22,67 @@ function formatK(n: number) {
   return String(n);
 }
 
-interface ChartCardProps {
-  titulo: string;
-  emoji: string;
-  data: { fecha: string; valor: number }[];
-  color: string;
-}
+const TOOLTIP_STYLE = {
+  background: "#111827",
+  border: "1px solid #1f2d45",
+  borderRadius: 8,
+  color: "#f0f4ff",
+  fontSize: 12,
+};
 
-function ChartCard({ titulo, emoji, data, color }: ChartCardProps) {
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-      <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-        <span>{emoji}</span> {titulo}
-      </h3>
-      <ResponsiveContainer width="100%" height={180}>
-        <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis
-            dataKey="fecha"
-            tick={{ fontSize: 11, fill: "#9ca3af" }}
-            tickFormatter={formatFecha}
-          />
-          <YAxis
-            tick={{ fontSize: 11, fill: "#9ca3af" }}
-            tickFormatter={formatK}
-            width={40}
-          />
-          <Tooltip
-            formatter={(v) => [formatK(Number(v)), ""]}
-            labelFormatter={(label) => formatFecha(String(label))}
-            contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb" }}
-          />
-          <Line
-            type="monotone"
-            dataKey="valor"
-            stroke={color}
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 4 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-export default function GraficoMetricas({ metricas }: Props) {
+export default function GraficoMetricas({ metricas, nombre }: Props) {
   if (metricas.length === 0) {
     return (
-      <p className="text-gray-400 text-sm text-center py-8">
-        Aún no hay datos históricos para este producto.
+      <p className="text-center py-12 text-sm" style={{ color: "var(--text-muted)" }}>
+        Sin datos históricos aún para este producto.
       </p>
     );
   }
 
-  const vistasData = metricas.map((m) => ({ fecha: m.fecha, valor: m.tiktokVistas }));
-  const trendsData = metricas.map((m) => ({ fecha: m.fecha, valor: m.googleTrends }));
-  const adsData = metricas.map((m) => ({ fecha: m.fecha, valor: m.metaAnuncios }));
+  const last = metricas[metricas.length - 1];
+  const donutData = [
+    { name: "TikTok vistas", value: Math.min(last.tiktokVistas, 20_000_000) },
+    { name: "Meta ads", value: last.metaAnuncios * 5000 },
+    { name: "Google Trends", value: last.googleTrends * 100000 },
+  ];
+  const COLORS = ["#6366f1", "#22d3ee", "#10b981"];
 
   return (
-    <div className="grid grid-cols-1 gap-4">
-      <ChartCard
-        titulo="Vistas en TikTok"
-        emoji="🎵"
-        data={vistasData}
-        color="#ff2d55"
-      />
-      <ChartCard
-        titulo="Interés en Google Trends"
-        emoji="🔍"
-        data={trendsData}
-        color="#4f46e5"
-      />
-      <ChartCard
-        titulo="Anuncios activos en Meta"
-        emoji="📣"
-        data={adsData}
-        color="#1877f2"
-      />
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* Donut */}
+      <div className="rounded-xl p-5 border" style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
+        <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--text-muted)" }}>
+          Distribución de señales
+        </h3>
+        <ResponsiveContainer width="100%" height={200}>
+          <PieChart>
+            <Pie data={donutData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value">
+              {donutData.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
+            </Pie>
+            <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: "var(--text-muted)" }} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [formatK(Number(v)), ""]} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Línea TikTok + Meta */}
+      <div className="lg:col-span-2 rounded-xl p-5 border" style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
+        <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--text-muted)" }}>
+          Evolución — {nombre}
+        </h3>
+        <ResponsiveContainer width="100%" height={200}>
+          <LineChart data={metricas} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#1f2d45" />
+            <XAxis dataKey="fecha" tick={{ fontSize: 10, fill: "#6b7fa3" }} tickFormatter={formatFecha} />
+            <YAxis tick={{ fontSize: 10, fill: "#6b7fa3" }} tickFormatter={formatK} width={38} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [formatK(Number(v)), ""]} labelFormatter={(l) => formatFecha(String(l))} />
+            <Line type="monotone" dataKey="tiktokVistas" stroke="#6366f1" strokeWidth={2} dot={false} name="TikTok vistas" />
+            <Line type="monotone" dataKey="metaAnuncios" stroke="#22d3ee" strokeWidth={2} dot={false} name="Meta ads" />
+            <Line type="monotone" dataKey="googleTrends" stroke="#10b981" strokeWidth={2} dot={false} name="Google Trends" />
+            <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: "var(--text-muted)" }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }

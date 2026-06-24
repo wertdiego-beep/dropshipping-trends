@@ -8,6 +8,21 @@ import GraficoMetricas from "@/components/GraficoMetricas";
 import FiltrosPeriodo from "@/components/FiltrosPeriodo";
 import type { Producto } from "@/lib/types";
 
+function fmt(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
+  return String(n);
+}
+
+function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div className="rounded-xl p-4 border" style={{ background: "var(--bg-card2)", borderColor: "var(--border)" }}>
+      <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>{label}</p>
+      <p className="text-xl font-bold" style={{ color: color ?? "var(--text-primary)" }}>{value}</p>
+    </div>
+  );
+}
+
 export default function ProductoDetalle() {
   const { id } = useParams<{ id: string }>();
   const [producto, setProducto] = useState<Producto | null>(null);
@@ -16,103 +31,72 @@ export default function ProductoDetalle() {
 
   useEffect(() => {
     fetch(`/api/productos/${id}`)
-      .then((r) => r.json())
+      .then(r => r.json())
       .then(setProducto)
       .finally(() => setLoading(false));
   }, [id]);
 
-  const metricasFiltradas = (producto?.metricas ?? []).filter((m) => {
-    const fechaLimite = new Date();
-    fechaLimite.setDate(fechaLimite.getDate() - periodo);
-    return new Date(m.fecha) >= fechaLimite;
+  const metricasFiltradas = (producto?.metricas ?? []).filter(m => {
+    const limite = new Date();
+    limite.setDate(limite.getDate() - periodo);
+    return new Date(m.fecha) >= limite;
   });
 
-  if (loading) {
-    return (
-      <div className="animate-pulse space-y-6">
-        <div className="h-6 bg-gray-200 rounded w-1/3" />
-        <div className="h-64 bg-gray-200 rounded-2xl" />
-        <div className="h-48 bg-gray-200 rounded-2xl" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="space-y-4 animate-pulse">
+      <div className="h-6 rounded w-1/4" style={{ background: "var(--bg-card)" }} />
+      <div className="h-40 rounded-xl" style={{ background: "var(--bg-card)" }} />
+      <div className="h-64 rounded-xl" style={{ background: "var(--bg-card)" }} />
+    </div>
+  );
 
-  if (!producto) {
-    return (
-      <div className="text-center py-20 text-gray-400">
-        <p className="text-5xl mb-4">❌</p>
-        <p className="text-lg font-medium text-gray-600">Producto no encontrado</p>
-        <Link href="/" className="mt-4 inline-block text-sm text-indigo-600 hover:underline">
-          ← Volver al feed
-        </Link>
-      </div>
-    );
-  }
+  if (!producto) return (
+    <div className="text-center py-20" style={{ color: "var(--text-muted)" }}>
+      <p className="text-5xl mb-4">❌</p>
+      <p className="mb-4">Producto no encontrado</p>
+      <Link href="/" className="text-sm" style={{ color: "var(--accent)" }}>← Volver al dashboard</Link>
+    </div>
+  );
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* Breadcrumb */}
-      <Link href="/" className="text-sm text-gray-400 hover:text-gray-700 flex items-center gap-1">
-        ← Volver al feed
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <Link href="/" className="text-sm flex items-center gap-1 hover:opacity-80 transition-opacity" style={{ color: "var(--text-muted)" }}>
+        ← Dashboard
       </Link>
 
-      {/* Card de producto */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="flex flex-col sm:flex-row gap-0">
-          {/* Imagen */}
+      {/* Producto info */}
+      <div className="rounded-xl border p-5" style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
+        <div className="flex flex-col sm:flex-row gap-5">
           {producto.imagen && (
-            <div className="relative sm:w-56 aspect-[4/3] sm:aspect-auto flex-shrink-0 bg-gray-100">
-              <Image
-                src={producto.imagen}
-                alt={producto.nombre}
-                fill
-                className="object-cover"
-                unoptimized
-              />
+            <div className="relative w-32 h-32 rounded-xl overflow-hidden shrink-0" style={{ background: "var(--bg-card2)" }}>
+              <Image src={producto.imagen} alt={producto.nombre} fill className="object-cover" unoptimized />
             </div>
           )}
-
-          {/* Info */}
-          <div className="p-6 flex-1 space-y-4">
+          <div className="flex-1 space-y-3">
             {producto.categoria && (
-              <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(99,102,241,0.15)", color: "var(--accent)" }}>
                 {producto.categoria}
               </span>
             )}
-            <h1 className="text-xl font-bold text-gray-900">{producto.nombre}</h1>
-
+            <h1 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>{producto.nombre}</h1>
             <div className="grid grid-cols-3 gap-3">
-              <Stat emoji="🎵" label="Vistas TikTok" value={fmt(producto.tiktokVistas)} />
-              <Stat emoji="📣" label="Ads en Meta" value={String(producto.metaAnunciosCount)} />
-              {producto.precioProveedor != null && (
-                <Stat
-                  emoji="💰"
-                  label={producto.proveedorNombre}
-                  value={`$${producto.precioProveedor.toFixed(2)}`}
-                  accent
-                />
-              )}
+              <Stat label="Vistas TikTok" value={fmt(producto.tiktokVistas)} color="var(--accent)" />
+              <Stat label="Ads en Meta" value={String(producto.metaAnunciosCount)} color="var(--accent2)" />
+              <Stat label={`Precio (${producto.proveedorNombre})`} value={producto.precioProveedor != null ? `$${producto.precioProveedor.toFixed(2)}` : "—"} color="var(--green)" />
             </div>
-
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-3 pt-1">
               {producto.tiktokVideoUrl && (
-                <a
-                  href={producto.tiktokVideoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors"
-                >
-                  Ver en TikTok
+                <a href={producto.tiktokVideoUrl} target="_blank" rel="noopener noreferrer"
+                  className="text-sm px-4 py-2 rounded-lg font-medium hover:opacity-80 transition-opacity"
+                  style={{ background: "var(--accent)", color: "#fff" }}>
+                  Ver en TikTok ↗
                 </a>
               )}
               {producto.proveedorUrl && (
-                <a
-                  href={producto.proveedorUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm border border-gray-300 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-50 transition-colors"
-                >
-                  Ver proveedor
+                <a href={producto.proveedorUrl} target="_blank" rel="noopener noreferrer"
+                  className="text-sm px-4 py-2 rounded-lg font-medium hover:opacity-80 transition-opacity border"
+                  style={{ borderColor: "var(--border)", color: "var(--text-muted)" }}>
+                  Ver proveedor ↗
                 </a>
               )}
             </div>
@@ -123,40 +107,11 @@ export default function ProductoDetalle() {
       {/* Gráficos */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-gray-800">Evolución histórica</h2>
+          <h2 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Evolución histórica</h2>
           <FiltrosPeriodo periodo={periodo} onChange={setPeriodo} />
         </div>
-        <GraficoMetricas metricas={metricasFiltradas} />
+        <GraficoMetricas metricas={metricasFiltradas} nombre={producto.nombre} />
       </div>
-    </div>
-  );
-}
-
-function fmt(n: number) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
-  return String(n);
-}
-
-function Stat({
-  emoji,
-  label,
-  value,
-  accent,
-}: {
-  emoji: string;
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
-  return (
-    <div className="bg-gray-50 rounded-xl p-3">
-      <p className="text-xs text-gray-400 mb-1">
-        {emoji} {label}
-      </p>
-      <p className={`text-lg font-bold ${accent ? "text-emerald-600" : "text-gray-900"}`}>
-        {value}
-      </p>
     </div>
   );
 }

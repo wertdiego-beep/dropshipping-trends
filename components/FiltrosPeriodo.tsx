@@ -6,23 +6,24 @@ interface Props {
 }
 
 const opciones = [
-  { label: "7 días", value: 7 },
-  { label: "30 días", value: 30 },
-  { label: "3 meses", value: 90 },
+  { label: "7D", value: 7 },
+  { label: "30D", value: 30 },
+  { label: "3M", value: 90 },
 ];
 
 export default function FiltrosPeriodo({ periodo, onChange }: Props) {
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-1 p-1 rounded-lg" style={{ background: "var(--bg-base)" }}>
       {opciones.map((op) => (
         <button
           key={op.value}
           onClick={() => onChange(op.value)}
-          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+          className="px-3 py-1 rounded-md text-xs font-semibold transition-all"
+          style={
             periodo === op.value
-              ? "bg-black text-white"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
+              ? { background: "var(--accent)", color: "#fff" }
+              : { color: "var(--text-muted)" }
+          }
         >
           {op.label}
         </button>
