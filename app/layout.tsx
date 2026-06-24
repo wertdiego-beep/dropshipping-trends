@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "DropTrends — Productos Trending",
@@ -15,9 +16,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <a href="/" className="flex items-center gap-2 font-bold text-lg" style={{ color: "var(--text-primary)" }}>
             <span>🔥</span> DropTrends
           </a>
-          <span className="text-xs px-3 py-1 rounded-full" style={{ background: "rgba(16,185,129,0.12)", color: "var(--green)" }}>
-            🟢 En vivo
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs px-3 py-1 rounded-full" style={{ background: "rgba(16,185,129,0.12)", color: "var(--green)" }}>
+              🟢 En vivo
+            </span>
+            <ThemeToggle />
+          </div>
         </header>
         <main className="max-w-5xl mx-auto px-4 py-8">{children}</main>
       </body>
