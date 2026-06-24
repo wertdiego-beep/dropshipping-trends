@@ -6,99 +6,90 @@ import type { Producto } from "@/lib/types";
 
 interface Props {
   producto: Producto;
-  rank: number;
 }
 
-function formatVistas(n: number): string {
+function fmt(n: number) {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
   return String(n);
 }
 
-export default function ProductCard({ producto, rank }: Props) {
+export default function ProductCard({ producto }: Props) {
   const router = useRouter();
 
   return (
-    <tr
+    <div
       onClick={() => router.push(`/producto/${producto.id}`)}
-      className="cursor-pointer transition-colors border-b"
-      style={{ borderColor: "var(--border)" }}
-      onMouseEnter={e => (e.currentTarget.style.background = "var(--bg-card2)")}
-      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+      className="cursor-pointer rounded-2xl border overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
+      style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}
     >
-      {/* Rank */}
-      <td className="px-4 py-3 text-sm font-bold w-10" style={{ color: "var(--text-muted)" }}>
-        #{rank}
-      </td>
-
-      {/* Producto */}
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0" style={{ background: "var(--bg-card2)" }}>
-            {producto.imagen ? (
-              <Image src={producto.imagen} alt={producto.nombre} fill className="object-cover" unoptimized />
-            ) : (
-              <span className="flex items-center justify-center h-full text-lg">📦</span>
-            )}
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium truncate max-w-[200px]" style={{ color: "var(--text-primary)" }}>
-              {producto.nombre}
-            </p>
-            {producto.categoria && (
-              <span className="text-xs" style={{ color: "var(--text-muted)" }}>{producto.categoria}</span>
-            )}
-          </div>
-        </div>
-      </td>
-
-      {/* Vistas TikTok */}
-      <td className="px-4 py-3 text-sm font-semibold" style={{ color: "var(--accent2)" }}>
-        🎵 {formatVistas(producto.tiktokVistas)}
-      </td>
-
-      {/* Precio */}
-      <td className="px-4 py-3 text-sm font-bold" style={{ color: "var(--green)" }}>
-        {producto.precioProveedor != null ? `$${producto.precioProveedor.toFixed(2)}` : "—"}
-      </td>
-
-      {/* Meta Ads */}
-      <td className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)" }}>
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full" style={{ background: producto.metaAnunciosCount > 500 ? "var(--green)" : "var(--text-muted)" }} />
-          {producto.metaAnunciosCount.toLocaleString()}
+      {/* Imagen */}
+      <div className="relative aspect-[4/3] overflow-hidden" style={{ background: "var(--bg-card2)" }}>
+        {producto.imagen ? (
+          <Image
+            src={producto.imagen}
+            alt={producto.nombre}
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-4xl">📦</div>
+        )}
+        {producto.categoria && (
+          <span className="absolute top-2 left-2 text-xs px-2 py-0.5 rounded-full font-medium backdrop-blur-sm"
+            style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}>
+            {producto.categoria}
+          </span>
+        )}
+        {/* Badge de vistas */}
+        <span className="absolute bottom-2 right-2 text-xs px-2 py-0.5 rounded-full font-semibold"
+          style={{ background: "rgba(99,102,241,0.85)", color: "#fff" }}>
+          🎵 {fmt(producto.tiktokVistas)}
         </span>
-      </td>
+      </div>
 
-      {/* Acciones */}
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-2">
-          {producto.tiktokVideoUrl && (
-            <a
-              href={producto.tiktokVideoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="text-xs px-2 py-1 rounded-md font-medium transition-opacity hover:opacity-80"
-              style={{ background: "rgba(99,102,241,0.15)", color: "var(--accent)" }}
-            >
-              TikTok ↗
-            </a>
-          )}
-          {producto.proveedorUrl && (
-            <a
-              href={producto.proveedorUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="text-xs px-2 py-1 rounded-md font-medium transition-opacity hover:opacity-80"
-              style={{ background: "rgba(16,185,129,0.12)", color: "var(--green)" }}
-            >
-              Proveedor ↗
-            </a>
-          )}
+      {/* Info */}
+      <div className="p-4 space-y-3">
+        <h3 className="text-sm font-semibold leading-snug line-clamp-2" style={{ color: "var(--text-primary)" }}>
+          {producto.nombre}
+        </h3>
+
+        {/* Métricas */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-lg px-3 py-2" style={{ background: "var(--bg-card2)" }}>
+            <p className="text-xs mb-0.5" style={{ color: "var(--text-muted)" }}>Meta Ads</p>
+            <p className="text-sm font-bold" style={{ color: "var(--accent2)" }}>
+              📣 {produto_meta(producto.metaAnunciosCount)}
+            </p>
+          </div>
+          <div className="rounded-lg px-3 py-2" style={{ background: "var(--bg-card2)" }}>
+            <p className="text-xs mb-0.5" style={{ color: "var(--text-muted)" }}>Proveedor</p>
+            <p className="text-sm font-bold" style={{ color: "var(--green)" }}>
+              {producto.precioProveedor != null ? `$${producto.precioProveedor.toFixed(2)}` : "—"}
+            </p>
+          </div>
         </div>
-      </td>
-    </tr>
+
+        {/* Ver video */}
+        {producto.tiktokVideoUrl && (
+          <a
+            href={producto.tiktokVideoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            className="block text-center text-xs py-2 rounded-lg font-medium transition-opacity hover:opacity-80"
+            style={{ background: "var(--accent)", color: "#fff" }}
+          >
+            Ver video en TikTok ↗
+          </a>
+        )}
+      </div>
+    </div>
   );
+}
+
+function produto_meta(n: number) {
+  if (n > 1000) return `${(n / 1000).toFixed(1)}K`;
+  return String(n);
 }
