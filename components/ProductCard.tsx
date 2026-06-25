@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { Producto } from "@/lib/types";
-import { linkAliExpress, linkCJ, calcularMargen } from "@/lib/proveedores";
+import { linkAliExpress, linkCJ, calcularMargen, scoreOportunidad } from "@/lib/proveedores";
 
 interface Props {
   producto: Producto;
@@ -19,6 +19,7 @@ export default function ProductCard({ producto }: Props) {
   const router = useRouter();
   const link = producto.proveedorUrl ?? producto.tiktokVideoUrl;
   const margen = calcularMargen(producto.precioVenta, producto.precioProveedor);
+  const score = scoreOportunidad(producto);
 
   return (
     <div
@@ -43,6 +44,12 @@ export default function ProductCard({ producto }: Props) {
           <span className="absolute top-2 left-2 text-xs px-2 py-0.5 rounded-full font-medium backdrop-blur-sm"
             style={{ background: "rgba(0,0,0,0.6)", color: "#fff" }}>
             {producto.categoria}
+          </span>
+        )}
+        {score >= 50 && (
+          <span className="absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full font-bold"
+            style={{ background: "linear-gradient(90deg,#f43f5e,#f59e0b)", color: "#fff" }}>
+            🔥 {score >= 70 ? "HOT" : "Oportunidad"}
           </span>
         )}
         <span className="absolute bottom-2 right-2 text-xs px-2 py-0.5 rounded-full font-semibold"

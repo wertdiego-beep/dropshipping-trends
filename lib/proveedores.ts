@@ -38,3 +38,22 @@ export function calcularMargen(precioVenta: number | null, precioCosto: number |
   const porcentaje = (ganancia / precioCosto) * 100;
   return { ganancia, porcentaje };
 }
+
+// Score de oportunidad (0–100): combina margen, demanda (anuncios Meta) y
+// popularidad (reviews). Un producto "caliente" tiene buen margen + se está
+// anunciando activamente + tiene tracción comprobada.
+export function scoreOportunidad(p: {
+  precioVenta: number | null;
+  precioProveedor: number | null;
+  metaAnunciosCount: number;
+  tiktokVistas: number;
+}): number {
+  const margen = calcularMargen(p.precioVenta, p.precioProveedor);
+  // Margen: hasta 50 pts (satura en 500% de markup)
+  const ptsMargen = margen ? Math.min(margen.porcentaje / 500, 1) * 50 : 0;
+  // Demanda Meta: hasta 35 pts (satura en 10 anuncios)
+  const ptsAds = Math.min(p.metaAnunciosCount / 10, 1) * 35;
+  // Popularidad reviews: hasta 15 pts (satura en 100k reviews)
+  const ptsReviews = Math.min(p.tiktokVistas / 100_000, 1) * 15;
+  return Math.round(ptsMargen + ptsAds + ptsReviews);
+}

@@ -4,11 +4,12 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import ProductCard from "@/components/ProductCard";
 import FiltrosPeriodo from "@/components/FiltrosPeriodo";
 import type { Producto } from "@/lib/types";
-import { calcularMargen } from "@/lib/proveedores";
+import { calcularMargen, scoreOportunidad } from "@/lib/proveedores";
 
-type Orden = "margen" | "metaAds" | "reviews" | "reciente";
+type Orden = "oportunidad" | "margen" | "metaAds" | "reviews" | "reciente";
 
 const ORDENES: { label: string; value: Orden }[] = [
+  { label: "🔥 Oportunidad", value: "oportunidad" },
   { label: "💰 Mejor margen", value: "margen" },
   { label: "📣 Más anuncios", value: "metaAds" },
   { label: "⭐ Más reviews", value: "reviews" },
@@ -17,6 +18,7 @@ const ORDENES: { label: string; value: Orden }[] = [
 
 function valorOrden(p: Producto, orden: Orden): number {
   switch (orden) {
+    case "oportunidad": return scoreOportunidad(p);
     case "margen": return calcularMargen(p.precioVenta, p.precioProveedor)?.ganancia ?? -1;
     case "metaAds": return p.metaAnunciosCount;
     case "reviews": return p.tiktokVistas;
@@ -29,7 +31,7 @@ export default function FeedPage() {
   const [periodo, setPeriodo] = useState(30);
   const [loading, setLoading] = useState(true);
   const [categoria, setCategoria] = useState<string>("Todas");
-  const [orden, setOrden] = useState<Orden>("margen");
+  const [orden, setOrden] = useState<Orden>("oportunidad");
 
   const fetchProductos = useCallback(async (dias: number) => {
     setLoading(true);
