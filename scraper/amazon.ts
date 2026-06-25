@@ -92,6 +92,33 @@ async function scrapeCategoria(page: Page, cat: typeof CATEGORIAS[number], limit
   return productos.slice(0, limite).map(p => ({ ...p, categoria: cat.nombre }));
 }
 
+// Visita la página del producto para obtener el precio real (la grilla de
+// best-sellers oculta el precio en muchos items).
+async function obtenerPrecioProducto(page: Page, url: string): Promise<number> {
+  try {
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
+    await page.waitForTimeout(800);
+    return await page.evaluate(() => {
+      const selectores = [
+        "#corePrice_feature_div .a-price .a-offscreen",
+        "#corePriceDisplay_desktop_feature_div .a-price .a-offscreen",
+        ".priceToPay .a-offscreen",
+        "#price_inside_buybox",
+        ".a-price .a-offscreen",
+      ];
+      for (const sel of selectores) {
+        const el = document.querySelector(sel);
+        const txt = el?.textContent?.replace(/,/g, "") ?? "";
+        const m = txt.match(/\$\s*(\d+(?:\.\d{1,2})?)/);
+        if (m) return parseFloat(m[1]);
+      }
+      return 0;
+    });
+  } catch {
+    return 0;
+  }
+}
+
 export async function scrapeAmazonBestSellers(porCategoria = 4): Promise<AmazonProduct[]> {
   let browser: Browser | null = null;
 
@@ -123,6 +150,13 @@ export async function scrapeAmazonBestSellers(porCategoria = 4): Promise<AmazonP
       } catch (e) {
         console.log(`[Amazon] ✗ Falló ${cat.nombre}`);
       }
+    }
+
+    // Para los productos sin precio en la grilla, visitar su página de detalle
+    const sinPrecio = todos.filter(p => p.precio === 0 && p.url.includes("/dp/"));
+    console.log(`[Amazon] Obteniendo precio real de ${sinPrecio.length} productos...`);
+    for (const p of sinPrecio) {
+      p.precio = await obtenerPrecioProducto(page, p.url);
     }
 
     await browser.close();
