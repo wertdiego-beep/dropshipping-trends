@@ -13,6 +13,7 @@ model Producto {
   tiktokVideoUrl    String?
   tiktokVideoId     String?
   tiktokVistas      Int             @default(0)
+  precioVenta       Float?
   precioProveedor   Float?
   proveedorUrl      String?
   proveedorNombre   String          @default("AliExpress")

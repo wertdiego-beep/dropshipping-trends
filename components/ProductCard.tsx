@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { Producto } from "@/lib/types";
-import { linkAliExpress, linkCJ } from "@/lib/proveedores";
+import { linkAliExpress, linkCJ, calcularMargen } from "@/lib/proveedores";
 
 interface Props {
   producto: Producto;
@@ -18,6 +18,7 @@ function fmt(n: number) {
 export default function ProductCard({ producto }: Props) {
   const router = useRouter();
   const link = producto.proveedorUrl ?? producto.tiktokVideoUrl;
+  const margen = calcularMargen(producto.precioVenta, producto.precioProveedor);
 
   return (
     <div
@@ -56,20 +57,40 @@ export default function ProductCard({ producto }: Props) {
           {producto.nombre}
         </h3>
 
-        <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-lg px-3 py-2" style={{ background: "var(--bg-card2)" }}>
-            <p className="text-xs mb-0.5" style={{ color: "var(--text-muted)" }}>Precio</p>
-            <p className="text-sm font-bold" style={{ color: "var(--green)" }}>
-              {producto.precioProveedor ? `$${producto.precioProveedor.toFixed(2)}` : "Ver →"}
-            </p>
+        {/* Margen: venta (Amazon) vs costo (CJ) */}
+        {margen ? (
+          <div className="rounded-lg px-3 py-2" style={{ background: "rgba(16,185,129,0.1)" }}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs" style={{ color: "var(--text-muted)" }}>Margen</span>
+              <span className="text-xs font-bold px-1.5 py-0.5 rounded" style={{ background: "var(--green)", color: "#04130d" }}>
+                +{margen.porcentaje.toFixed(0)}%
+              </span>
+            </div>
+            <div className="flex items-center justify-between mt-1 text-sm">
+              <span style={{ color: "var(--text-muted)" }}>
+                ${producto.precioProveedor!.toFixed(2)} → <b style={{ color: "var(--text-primary)" }}>${producto.precioVenta!.toFixed(2)}</b>
+              </span>
+              <span className="font-bold" style={{ color: "var(--green)" }}>
+                +${margen.ganancia.toFixed(2)}
+              </span>
+            </div>
           </div>
-          <div className="rounded-lg px-3 py-2" style={{ background: "var(--bg-card2)" }}>
-            <p className="text-xs mb-0.5" style={{ color: "var(--text-muted)" }}>Meta Ads</p>
-            <p className="text-sm font-bold" style={{ color: "var(--accent2)" }}>
-              📣 {fmt(producto.metaAnunciosCount)}
-            </p>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-lg px-3 py-2" style={{ background: "var(--bg-card2)" }}>
+              <p className="text-xs mb-0.5" style={{ color: "var(--text-muted)" }}>Venta</p>
+              <p className="text-sm font-bold" style={{ color: "var(--green)" }}>
+                {producto.precioVenta ? `$${producto.precioVenta.toFixed(2)}` : "—"}
+              </p>
+            </div>
+            <div className="rounded-lg px-3 py-2" style={{ background: "var(--bg-card2)" }}>
+              <p className="text-xs mb-0.5" style={{ color: "var(--text-muted)" }}>Meta Ads</p>
+              <p className="text-sm font-bold" style={{ color: "var(--accent2)" }}>
+                📣 {fmt(producto.metaAnunciosCount)}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Buscar proveedor */}
         <div className="grid grid-cols-2 gap-2">

@@ -7,7 +7,7 @@ import Link from "next/link";
 import FiltrosPeriodo from "@/components/FiltrosPeriodo";
 import Analytics from "@/components/Analytics";
 import type { Producto } from "@/lib/types";
-import { linkAliExpress, linkCJ } from "@/lib/proveedores";
+import { linkAliExpress, linkCJ, calcularMargen } from "@/lib/proveedores";
 
 function fmt(n: number) {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -42,6 +42,8 @@ export default function ProductoDetalle() {
     </div>
   );
 
+  const margen = producto ? calcularMargen(producto.precioVenta, producto.precioProveedor) : null;
+
   if (!producto) return (
     <div className="text-center py-20" style={{ color: "var(--text-muted)" }}>
       <p className="text-5xl mb-4">❌</p>
@@ -75,10 +77,34 @@ export default function ProductoDetalle() {
             <div className="flex flex-wrap gap-3 text-sm">
               <span className="font-semibold" style={{ color: "#6366f1" }}>⭐ {fmt(producto.tiktokVistas)} reviews</span>
               <span className="font-semibold" style={{ color: "#22d3ee" }}>📣 {producto.metaAnunciosCount} ads</span>
-              {producto.precioProveedor != null && producto.precioProveedor > 0 && (
-                <span className="font-semibold" style={{ color: "#10b981" }}>💰 ${producto.precioProveedor.toFixed(2)}</span>
-              )}
             </div>
+
+            {/* Desglose de margen */}
+            {margen ? (
+              <div className="rounded-xl border p-3 mt-1" style={{ background: "rgba(16,185,129,0.08)", borderColor: "rgba(16,185,129,0.3)" }}>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>Costo (CJ)</p>
+                    <p className="text-base font-bold" style={{ color: "var(--text-primary)" }}>${producto.precioProveedor!.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>Venta (Amazon)</p>
+                    <p className="text-base font-bold" style={{ color: "var(--text-primary)" }}>${producto.precioVenta!.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>Margen</p>
+                    <p className="text-base font-bold" style={{ color: "var(--green)" }}>+${margen.ganancia.toFixed(2)} <span className="text-xs">({margen.porcentaje.toFixed(0)}%)</span></p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-3 text-sm mt-1">
+                {producto.precioVenta != null && producto.precioVenta > 0 && (
+                  <span className="font-semibold" style={{ color: "#10b981" }}>💰 Venta ${producto.precioVenta.toFixed(2)}</span>
+                )}
+                <span style={{ color: "var(--text-muted)" }}>Costo del proveedor: buscá abajo en CJ/AliExpress</span>
+              </div>
+            )}
           </div>
         </div>
 

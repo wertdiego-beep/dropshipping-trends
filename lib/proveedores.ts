@@ -25,3 +25,16 @@ export function linkCJ(nombre: string): string {
   const q = encodeURIComponent(keywordsDeBusqueda(nombre));
   return `https://cjdropshipping.com/search/${q}.html`;
 }
+
+export interface Margen {
+  ganancia: number;   // venta - costo
+  porcentaje: number; // markup sobre el costo
+}
+
+// Calcula el margen entre el precio de venta (Amazon) y el costo del proveedor (CJ)
+export function calcularMargen(precioVenta: number | null, precioCosto: number | null): Margen | null {
+  if (!precioVenta || !precioCosto || precioCosto <= 0) return null;
+  const ganancia = precioVenta - precioCosto;
+  const porcentaje = (ganancia / precioCosto) * 100;
+  return { ganancia, porcentaje };
+}

@@ -2,6 +2,7 @@ import "dotenv/config";
 import cron from "node-cron";
 import { scrapeAmazonBestSellers, type AmazonProduct } from "../scraper/amazon";
 import { contarAnunciosMeta } from "../scraper/meta";
+import { buscarProveedorCJ } from "../scraper/cj-api";
 import { prisma } from "../lib/prisma";
 
 // ID estable por producto basado en su URL de Amazon (evita duplicados)
@@ -13,15 +14,20 @@ function idDe(p: AmazonProduct): string {
 async function procesar(p: AmazonProduct) {
   const id = idDe(p);
 
-  // Contar anuncios activos en Meta para este producto
-  const metaAds = await contarAnunciosMeta(p.nombre);
+  // Meta ads + proveedor CJ en paralelo
+  const [metaAds, cj] = await Promise.all([
+    contarAnunciosMeta(p.nombre),
+    buscarProveedorCJ(p.nombre),
+  ]);
 
   const saved = await prisma.producto.upsert({
     where: { id },
     update: {
       tiktokVistas: p.reviews,
-      precioProveedor: p.precio || undefined,
-      proveedorUrl: p.url,
+      precioVenta: p.precio || undefined,
+      precioProveedor: cj?.precio ?? undefined,
+      proveedorUrl: cj?.url ?? undefined,
+      proveedorNombre: cj ? "CJ Dropshipping" : undefined,
       metaAnunciosCount: metaAds.count,
       imagen: p.imagen || undefined,
       actualizadoEn: new Date(),
@@ -29,14 +35,15 @@ async function procesar(p: AmazonProduct) {
     create: {
       id,
       nombre: p.nombre,
-      tiktokVideoUrl: null,
+      tiktokVideoUrl: p.url, // URL de Amazon (origen del producto)
       tiktokVideoId: null,
       tiktokVistas: p.reviews,
       imagen: p.imagen,
       categoria: p.categoria,
-      precioProveedor: p.precio || null,
-      proveedorUrl: p.url,
-      proveedorNombre: "Amazon",
+      precioVenta: p.precio || null,
+      precioProveedor: cj?.precio ?? null,
+      proveedorUrl: cj?.url ?? null,
+      proveedorNombre: cj ? "CJ Dropshipping" : "CJ Dropshipping",
       metaAnunciosCount: metaAds.count,
     },
   });
@@ -63,7 +70,8 @@ async function procesar(p: AmazonProduct) {
     },
   });
 
-  console.log(`[daily] ✓ ${p.nombre.slice(0, 50)} | $${p.precio} | ${p.reviews} reviews | ${metaAds.count} ads`);
+  const margen = p.precio && cj?.precio ? (p.precio - cj.precio).toFixed(2) : "n/a";
+  console.log(`[daily] ✓ ${p.nombre.slice(0, 45)} | venta $${p.precio} | costo CJ $${cj?.precio ?? "n/a"} | margen $${margen} | ${metaAds.count} ads`);
 }
 
 export async function runDailyJob() {

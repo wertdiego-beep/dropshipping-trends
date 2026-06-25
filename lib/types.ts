@@ -14,6 +14,7 @@ export interface Producto {
   tiktokVideoUrl: string | null;
   tiktokVideoId: string | null;
   tiktokVistas: number;
+  precioVenta: number | null;
   precioProveedor: number | null;
   proveedorUrl: string | null;
   proveedorNombre: string;
