@@ -32,6 +32,7 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
   const [categoria, setCategoria] = useState<string>("Todas");
   const [orden, setOrden] = useState<Orden>("oportunidad");
+  const [busqueda, setBusqueda] = useState("");
 
   const fetchProductos = useCallback(async (dias: number) => {
     setLoading(true);
@@ -52,11 +53,13 @@ export default function FeedPage() {
   }, [productos]);
 
   const visibles = useMemo(() => {
-    const filtrados = categoria === "Todas"
-      ? productos
-      : productos.filter(p => p.categoria === categoria);
+    const q = busqueda.trim().toLowerCase();
+    const filtrados = productos.filter(p =>
+      (categoria === "Todas" || p.categoria === categoria) &&
+      (q === "" || p.nombre.toLowerCase().includes(q))
+    );
     return [...filtrados].sort((a, b) => valorOrden(b, orden) - valorOrden(a, orden));
-  }, [productos, categoria, orden]);
+  }, [productos, categoria, orden, busqueda]);
 
   return (
     <div className="space-y-5">
@@ -71,6 +74,30 @@ export default function FeedPage() {
         </div>
         <FiltrosPeriodo periodo={periodo} onChange={setPeriodo} />
       </div>
+
+      {/* Buscador */}
+      {!loading && productos.length > 0 && (
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "var(--text-muted)" }}>🔎</span>
+          <input
+            type="text"
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            placeholder="Buscar producto por nombre..."
+            className="w-full rounded-xl py-2.5 pl-9 pr-9 text-sm outline-none transition-colors"
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
+          />
+          {busqueda && (
+            <button
+              onClick={() => setBusqueda("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-sm hover:opacity-70"
+              style={{ color: "var(--text-muted)" }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Controles: categorías + orden */}
       {!loading && productos.length > 0 && (
@@ -124,8 +151,10 @@ export default function FeedPage() {
         </div>
       ) : visibles.length === 0 ? (
         <div className="text-center py-20" style={{ color: "var(--text-muted)" }}>
-          <p className="text-5xl mb-4">📭</p>
-          <p className="text-sm">No hay productos en esta categoría.</p>
+          <p className="text-5xl mb-4">🔍</p>
+          <p className="text-sm">
+            {busqueda ? `Sin resultados para "${busqueda}".` : "No hay productos en esta categoría."}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
