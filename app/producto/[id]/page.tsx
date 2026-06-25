@@ -4,11 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-} from "recharts";
 import FiltrosPeriodo from "@/components/FiltrosPeriodo";
+import Analytics from "@/components/Analytics";
 import type { Producto } from "@/lib/types";
 import { linkAliExpress, linkCJ } from "@/lib/proveedores";
 
@@ -17,19 +14,6 @@ function fmt(n: number) {
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
   return String(n);
 }
-
-function formatFecha(iso: string) {
-  const d = new Date(iso);
-  return `${d.getDate()}/${d.getMonth() + 1}`;
-}
-
-const TOOLTIP = {
-  background: "#111827",
-  border: "1px solid #1f2d45",
-  borderRadius: 8,
-  color: "#f0f4ff",
-  fontSize: 12,
-};
 
 export default function ProductoDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -125,73 +109,7 @@ export default function ProductoDetalle() {
         <FiltrosPeriodo periodo={periodo} onChange={setPeriodo} />
       </div>
 
-      {metricas.length === 0 ? (
-        <p className="text-center py-10 text-sm" style={{ color: "var(--text-muted)" }}>
-          Sin datos históricos para este período.
-        </p>
-      ) : (
-        <>
-          {/* Gráfico Reviews — Area */}
-          <div className="rounded-2xl border p-5" style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-            <h3 className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: "var(--text-muted)" }}>
-              ⭐ Reviews / Popularidad
-            </h3>
-            <ResponsiveContainer width="100%" height={180}>
-              <AreaChart data={metricas} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="tikGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1f2d45" />
-                <XAxis dataKey="fecha" tick={{ fontSize: 10, fill: "#6b7fa3" }} tickFormatter={formatFecha} />
-                <YAxis tick={{ fontSize: 10, fill: "#6b7fa3" }} tickFormatter={v => fmt(Number(v))} width={40} />
-                <Tooltip contentStyle={TOOLTIP} formatter={(v) => [fmt(Number(v)), "Vistas"]} labelFormatter={l => formatFecha(String(l))} />
-                <Area type="monotone" dataKey="tiktokVistas" stroke="#6366f1" strokeWidth={2} fill="url(#tikGrad)" dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Gráfico Meta Ads — Barras */}
-          <div className="rounded-2xl border p-5" style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-            <h3 className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: "var(--text-muted)" }}>
-              📣 Anuncios activos en Meta
-            </h3>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={metricas} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1f2d45" />
-                <XAxis dataKey="fecha" tick={{ fontSize: 10, fill: "#6b7fa3" }} tickFormatter={formatFecha} />
-                <YAxis tick={{ fontSize: 10, fill: "#6b7fa3" }} width={36} />
-                <Tooltip contentStyle={TOOLTIP} formatter={(v) => [v, "Anuncios"]} labelFormatter={l => formatFecha(String(l))} />
-                <Bar dataKey="metaAnuncios" fill="#22d3ee" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Gráfico Google Trends — Area */}
-          <div className="rounded-2xl border p-5" style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-            <h3 className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: "var(--text-muted)" }}>
-              ⭐ Rating del producto (0–100)
-            </h3>
-            <ResponsiveContainer width="100%" height={180}>
-              <AreaChart data={metricas} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="gGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1f2d45" />
-                <XAxis dataKey="fecha" tick={{ fontSize: 10, fill: "#6b7fa3" }} tickFormatter={formatFecha} />
-                <YAxis tick={{ fontSize: 10, fill: "#6b7fa3" }} domain={[0, 100]} width={30} />
-                <Tooltip contentStyle={TOOLTIP} formatter={(v) => [v, "Interés"]} labelFormatter={l => formatFecha(String(l))} />
-                <Area type="monotone" dataKey="googleTrends" stroke="#10b981" strokeWidth={2} fill="url(#gGrad)" dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </>
-      )}
+      <Analytics metricas={metricas} />
     </div>
   );
 }
