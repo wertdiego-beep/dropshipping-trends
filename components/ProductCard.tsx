@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { Producto } from "@/lib/types";
+import { linkAliExpress, linkCJ } from "@/lib/proveedores";
 
 interface Props {
   producto: Producto;
@@ -68,6 +69,30 @@ export default function ProductCard({ producto }: Props) {
               📣 {fmt(producto.metaAnunciosCount)}
             </p>
           </div>
+        </div>
+
+        {/* Buscar proveedor */}
+        <div className="grid grid-cols-2 gap-2">
+          <a
+            href={linkAliExpress(producto.nombre)}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            className="text-center text-xs py-2 rounded-lg font-medium transition-opacity hover:opacity-80"
+            style={{ background: "rgba(255,79,0,0.15)", color: "#ff6a2b" }}
+          >
+            AliExpress ↗
+          </a>
+          <a
+            href={linkCJ(producto.nombre)}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            className="text-center text-xs py-2 rounded-lg font-medium transition-opacity hover:opacity-80"
+            style={{ background: "rgba(34,211,238,0.15)", color: "var(--accent2)" }}
+          >
+            CJ Dropshipping ↗
+          </a>
         </div>
 
         {link && (

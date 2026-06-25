@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import FiltrosPeriodo from "@/components/FiltrosPeriodo";
 import type { Producto } from "@/lib/types";
+import { linkAliExpress, linkCJ } from "@/lib/proveedores";
 
 function fmt(n: number) {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -97,7 +98,7 @@ export default function ProductoDetalle() {
           </div>
         </div>
 
-        <div className="flex gap-2 mt-4">
+        <div className="flex flex-wrap gap-2 mt-4">
           {producto.proveedorUrl && (
             <a href={producto.proveedorUrl} target="_blank" rel="noopener noreferrer"
               className="text-xs px-4 py-2 rounded-lg font-semibold hover:opacity-80 transition-opacity"
@@ -105,6 +106,16 @@ export default function ProductoDetalle() {
               Ver en {producto.proveedorNombre} ↗
             </a>
           )}
+          <a href={linkAliExpress(producto.nombre)} target="_blank" rel="noopener noreferrer"
+            className="text-xs px-4 py-2 rounded-lg font-semibold hover:opacity-80 transition-opacity"
+            style={{ background: "rgba(255,79,0,0.15)", color: "#ff6a2b" }}>
+            🔎 Buscar en AliExpress
+          </a>
+          <a href={linkCJ(producto.nombre)} target="_blank" rel="noopener noreferrer"
+            className="text-xs px-4 py-2 rounded-lg font-semibold hover:opacity-80 transition-opacity"
+            style={{ background: "rgba(34,211,238,0.15)", color: "var(--accent2)" }}>
+            🔎 Buscar en CJ
+          </a>
         </div>
       </div>
 
