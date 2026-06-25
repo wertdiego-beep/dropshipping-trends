@@ -3,7 +3,23 @@ import cron from "node-cron";
 import { scrapeAmazonBestSellers, type AmazonProduct } from "../scraper/amazon";
 import { contarAnunciosMeta } from "../scraper/meta";
 import { buscarProveedorCJ } from "../scraper/cj-api";
+import { scrapeTendenciasTikTok } from "../scraper/tiktok-trends";
 import { prisma } from "../lib/prisma";
+
+// Scrapea tendencias de TikTok (Creative Center) y las guarda con fecha
+async function guardarTendenciasTikTok() {
+  const tendencias = await scrapeTendenciasTikTok(30);
+  console.log(`[daily] ${tendencias.length} tendencias de TikTok`);
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  for (const t of tendencias) {
+    await prisma.tendenciaTikTok.upsert({
+      where: { hashtag_fecha: { hashtag: t.hashtag, fecha: hoy } },
+      update: { posts: t.posts, vistas: t.vistas, categoria: t.categoria },
+      create: { hashtag: t.hashtag, posts: t.posts, vistas: t.vistas, categoria: t.categoria, fecha: hoy },
+    });
+  }
+}
 
 // ID estable por producto basado en su URL de Amazon (evita duplicados)
 function idDe(p: AmazonProduct): string {
@@ -84,6 +100,9 @@ export async function runDailyJob() {
   for (let i = 0; i < productos.length; i += 3) {
     await Promise.allSettled(productos.slice(i, i + 3).map(procesar));
   }
+
+  // Tendencias de TikTok (no frena el job si falla)
+  await guardarTendenciasTikTok().catch(e => console.error("[daily] tendencias falló:", e));
 
   console.log(`[daily] Finalizado ${new Date().toISOString()}`);
 }

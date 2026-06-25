@@ -16,7 +16,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <a href="/" className="flex items-center gap-2 font-bold text-lg" style={{ color: "var(--text-primary)" }}>
             <span>🔥</span> DropTrends
           </a>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <a href="/tendencias" className="text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors hover:opacity-80"
+              style={{ color: "var(--text-muted)" }}>
+              🎵 Tendencias
+            </a>
             <a href="/agregar" className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90"
               style={{ background: "var(--accent)", color: "#fff" }}>
               ➕ Agregar
