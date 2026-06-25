@@ -30,7 +30,7 @@ export default function FeedPage() {
             🔥 Productos Trending
           </h1>
           <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
-            {loading ? "Cargando..." : `${productos.length} productos detectados`}
+            {loading ? "Cargando..." : `${productos.length} productos de Amazon Best Sellers`}
           </p>
         </div>
         <FiltrosPeriodo periodo={periodo} onChange={setPeriodo} />

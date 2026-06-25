@@ -27,5 +27,4 @@ jobs:
       - name: Run daily scraper
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          TIKTOK_COOKIE: ${{ secrets.TIKTOK_COOKIE }}
-        run: npx ts-node --esm jobs/daily.ts
+        run: npx tsx jobs/daily.ts

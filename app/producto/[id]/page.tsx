@@ -88,9 +88,9 @@ export default function ProductoDetalle() {
               {producto.nombre}
             </h1>
             <div className="flex flex-wrap gap-3 text-sm">
-              <span className="font-semibold" style={{ color: "#6366f1" }}>🎵 {fmt(producto.tiktokVistas)} vistas</span>
+              <span className="font-semibold" style={{ color: "#6366f1" }}>⭐ {fmt(producto.tiktokVistas)} reviews</span>
               <span className="font-semibold" style={{ color: "#22d3ee" }}>📣 {producto.metaAnunciosCount} ads</span>
-              {producto.precioProveedor != null && (
+              {producto.precioProveedor != null && producto.precioProveedor > 0 && (
                 <span className="font-semibold" style={{ color: "#10b981" }}>💰 ${producto.precioProveedor.toFixed(2)}</span>
               )}
             </div>
@@ -98,18 +98,11 @@ export default function ProductoDetalle() {
         </div>
 
         <div className="flex gap-2 mt-4">
-          {producto.tiktokVideoUrl && (
-            <a href={producto.tiktokVideoUrl} target="_blank" rel="noopener noreferrer"
-              className="text-xs px-4 py-2 rounded-lg font-semibold hover:opacity-80 transition-opacity"
-              style={{ background: "var(--accent)", color: "#fff" }}>
-              🎵 Ver en TikTok
-            </a>
-          )}
           {producto.proveedorUrl && (
             <a href={producto.proveedorUrl} target="_blank" rel="noopener noreferrer"
-              className="text-xs px-4 py-2 rounded-lg font-semibold hover:opacity-80 transition-opacity border"
-              style={{ borderColor: "var(--border)", color: "var(--text-muted)" }}>
-              Ver proveedor
+              className="text-xs px-4 py-2 rounded-lg font-semibold hover:opacity-80 transition-opacity"
+              style={{ background: "var(--accent)", color: "#fff" }}>
+              Ver en {producto.proveedorNombre} ↗
             </a>
           )}
         </div>
@@ -127,10 +120,10 @@ export default function ProductoDetalle() {
         </p>
       ) : (
         <>
-          {/* Gráfico TikTok — Area */}
+          {/* Gráfico Reviews — Area */}
           <div className="rounded-2xl border p-5" style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
             <h3 className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: "var(--text-muted)" }}>
-              🎵 Vistas en TikTok
+              ⭐ Reviews / Popularidad
             </h3>
             <ResponsiveContainer width="100%" height={180}>
               <AreaChart data={metricas} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
@@ -168,7 +161,7 @@ export default function ProductoDetalle() {
           {/* Gráfico Google Trends — Area */}
           <div className="rounded-2xl border p-5" style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
             <h3 className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: "var(--text-muted)" }}>
-              🔍 Interés en Google Trends (0–100)
+              ⭐ Rating del producto (0–100)
             </h3>
             <ResponsiveContainer width="100%" height={180}>
               <AreaChart data={metricas} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>

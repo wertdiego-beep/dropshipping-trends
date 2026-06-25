@@ -1,103 +1,90 @@
 import "dotenv/config";
 import cron from "node-cron";
-import { scrapeTikTokTrending } from "../scraper/tiktok";
-import { buscarProveedor } from "../scraper/aliexpress";
+import { scrapeAmazonBestSellers, type AmazonProduct } from "../scraper/amazon";
 import { contarAnunciosMeta } from "../scraper/meta";
 import { prisma } from "../lib/prisma";
 
-async function procesarProducto(producto: Awaited<ReturnType<typeof scrapeTikTokTrending>>[number]) {
-  // Buscar proveedor y anuncios en paralelo
-  const [proveedor, metaAds] = await Promise.all([
-    buscarProveedor(producto.nombre),
-    contarAnunciosMeta(producto.nombre),
-  ]);
+// ID estable por producto basado en su URL de Amazon (evita duplicados)
+function idDe(p: AmazonProduct): string {
+  const asin = p.url.match(/\/dp\/([A-Z0-9]+)/)?.[1];
+  return asin ? `amazon_${asin}` : `amazon_${Buffer.from(p.nombre).toString("base64").slice(0, 24)}`;
+}
 
-  // Upsert del producto (evitar duplicados por videoId)
+async function procesar(p: AmazonProduct) {
+  const id = idDe(p);
+
+  // Contar anuncios activos en Meta para este producto
+  const metaAds = await contarAnunciosMeta(p.nombre);
+
   const saved = await prisma.producto.upsert({
-    where: {
-      // Usamos el videoId como identificador único si existe
-      id: producto.tiktokVideoId
-        ? `tiktok_${producto.tiktokVideoId}`
-        : `nombre_${Buffer.from(producto.nombre).toString("base64").slice(0, 20)}`,
-    },
+    where: { id },
     update: {
-      tiktokVistas: producto.tiktokVistas,
-      precioProveedor: proveedor?.precio ?? undefined,
-      proveedorUrl: proveedor?.url ?? undefined,
+      tiktokVistas: p.reviews,
+      precioProveedor: p.precio || undefined,
+      proveedorUrl: p.url,
       metaAnunciosCount: metaAds.count,
+      imagen: p.imagen || undefined,
       actualizadoEn: new Date(),
     },
     create: {
-      id: producto.tiktokVideoId
-        ? `tiktok_${producto.tiktokVideoId}`
-        : undefined,
-      nombre: producto.nombre,
-      tiktokVideoUrl: producto.tiktokVideoUrl,
-      tiktokVideoId: producto.tiktokVideoId,
-      tiktokVistas: producto.tiktokVistas,
-      imagen: producto.imagen,
-      categoria: producto.categoria,
-      precioProveedor: proveedor?.precio ?? null,
-      proveedorUrl: proveedor?.url ?? null,
-      proveedorNombre: proveedor?.proveedor ?? "AliExpress",
+      id,
+      nombre: p.nombre,
+      tiktokVideoUrl: null,
+      tiktokVideoId: null,
+      tiktokVistas: p.reviews,
+      imagen: p.imagen,
+      categoria: p.categoria,
+      precioProveedor: p.precio || null,
+      proveedorUrl: p.url,
+      proveedorNombre: "Amazon",
       metaAnunciosCount: metaAds.count,
     },
   });
 
-  // Guardar métrica del día
+  // Métrica del día (historial)
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
 
   await prisma.metricaDiaria.upsert({
-    where: {
-      productoId_fecha: {
-        productoId: saved.id,
-        fecha: hoy,
-      },
-    },
+    where: { productoId_fecha: { productoId: saved.id, fecha: hoy } },
     update: {
-      tiktokVistas: producto.tiktokVistas,
+      tiktokVistas: p.reviews,
+      googleTrends: Math.round(p.rating * 20), // rating 0-5 → 0-100
       metaAnuncios: metaAds.count,
-      precioProveedor: proveedor?.precio ?? null,
+      precioProveedor: p.precio || null,
     },
     create: {
       productoId: saved.id,
       fecha: hoy,
-      tiktokVistas: producto.tiktokVistas,
+      tiktokVistas: p.reviews,
+      googleTrends: Math.round(p.rating * 20),
       metaAnuncios: metaAds.count,
-      precioProveedor: proveedor?.precio ?? null,
+      precioProveedor: p.precio || null,
     },
   });
 
-  console.log(`[daily] ✓ ${producto.nombre} | vistas: ${producto.tiktokVistas} | precio: ${proveedor?.precio ?? "n/a"} | meta ads: ${metaAds.count}`);
+  console.log(`[daily] ✓ ${p.nombre.slice(0, 50)} | $${p.precio} | ${p.reviews} reviews | ${metaAds.count} ads`);
 }
 
 export async function runDailyJob() {
-  console.log(`[daily] Iniciando scraping ${new Date().toISOString()}`);
+  console.log(`[daily] Iniciando ${new Date().toISOString()}`);
 
-  const productos = await scrapeTikTokTrending(20);
-  console.log(`[daily] Encontrados ${productos.length} productos en TikTok`);
+  const productos = await scrapeAmazonBestSellers(5);
+  console.log(`[daily] ${productos.length} productos de Amazon Best Sellers`);
 
-  // Procesar de a 3 en paralelo para no saturar
+  // Procesar de a 3 en paralelo
   for (let i = 0; i < productos.length; i += 3) {
-    const batch = productos.slice(i, i + 3);
-    await Promise.allSettled(batch.map(procesarProducto));
+    await Promise.allSettled(productos.slice(i, i + 3).map(procesar));
   }
 
   console.log(`[daily] Finalizado ${new Date().toISOString()}`);
 }
 
-// Correr todos los días a las 6 AM
+// Cron: todos los días a las 6 AM
 cron.schedule("0 6 * * *", () => {
   runDailyJob().catch(console.error);
 });
 
-// Ejecutar inmediatamente si se llama directo
 if (require.main === module) {
-  runDailyJob()
-    .then(() => process.exit(0))
-    .catch((e) => {
-      console.error(e);
-      process.exit(1);
-    });
+  runDailyJob().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); });
 }

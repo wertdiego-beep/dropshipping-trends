@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "p16-sign.tiktokcdn-us.com" },
       { protocol: "https", hostname: "**.cjdropshipping.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "**.media-amazon.com" },
+      { protocol: "https", hostname: "**.ssl-images-amazon.com" },
+      { protocol: "https", hostname: "m.media-amazon.com" },
     ],
   },
 };
