@@ -27,4 +27,6 @@ jobs:
       - name: Run daily scraper
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CJ_EMAIL: ${{ secrets.CJ_EMAIL }}
+          CJ_API_KEY: ${{ secrets.CJ_API_KEY }}
         run: npx tsx jobs/daily.ts

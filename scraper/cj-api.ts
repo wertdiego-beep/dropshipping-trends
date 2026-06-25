@@ -14,6 +14,19 @@ export interface CJProveedor {
 // Cache del access token en memoria (CJ lo da con validez de ~15 días)
 let tokenCache: { token: string; expira: number } | null = null;
 
+// CJ limita a 1 request/segundo. Serializamos las llamadas con una cola
+// que garantiza al menos 1.2s entre cada request a la API.
+let colaCJ: Promise<unknown> = Promise.resolve();
+function throttle<T>(fn: () => Promise<T>): Promise<T> {
+  const resultado = colaCJ.then(async () => {
+    const r = await fn();
+    await new Promise(res => setTimeout(res, 1200));
+    return r;
+  });
+  colaCJ = resultado.catch(() => {});
+  return resultado as Promise<T>;
+}
+
 async function getAccessToken(): Promise<string | null> {
   const email = process.env.CJ_EMAIL;
   const apiKey = process.env.CJ_API_KEY;
@@ -22,11 +35,11 @@ async function getAccessToken(): Promise<string | null> {
   if (tokenCache && tokenCache.expira > Date.now()) return tokenCache.token;
 
   try {
-    const res = await fetch(`${BASE}/authentication/getAccessToken`, {
+    const res = await throttle(() => fetch(`${BASE}/authentication/getAccessToken`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, apiKey }),
-    });
+    }));
     const json = await res.json();
     const token = json?.data?.accessToken as string | undefined;
     if (!token) {
@@ -63,9 +76,9 @@ export async function buscarProveedorCJ(nombre: string): Promise<CJProveedor | n
       pageSize: "5",
       productNameEn: nombre.split(" ").slice(0, 5).join(" "),
     });
-    const res = await fetch(`${BASE}/product/list?${params}`, {
+    const res = await throttle(() => fetch(`${BASE}/product/list?${params}`, {
       headers: { "CJ-Access-Token": token },
-    });
+    }));
     const json = await res.json();
     const lista = json?.data?.list as Array<Record<string, unknown>> | undefined;
     if (!lista || lista.length === 0) return null;
