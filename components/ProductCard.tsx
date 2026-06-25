@@ -52,6 +52,12 @@ export default function ProductCard({ producto }: Props) {
             🔥 {score >= 70 ? "HOT" : "Oportunidad"}
           </span>
         )}
+        {producto.creadoPorUsuario && (
+          <span className="absolute bottom-2 left-2 text-xs px-2 py-0.5 rounded-full font-medium backdrop-blur-sm"
+            style={{ background: "rgba(99,102,241,0.85)", color: "#fff" }}>
+            👤 Comunidad
+          </span>
+        )}
         <span className="absolute bottom-2 right-2 text-xs px-2 py-0.5 rounded-full font-semibold"
           style={{ background: "rgba(99,102,241,0.9)", color: "#fff" }}>
           ⭐ {fmt(producto.tiktokVistas)} reviews

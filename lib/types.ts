@@ -22,6 +22,7 @@ export interface Producto {
   imagen: string | null;
   categoria: string | null;
   activo: boolean;
+  creadoPorUsuario: boolean;
   creadoEn: string;
   actualizadoEn: string;
   metricas: MetricaDiaria[];

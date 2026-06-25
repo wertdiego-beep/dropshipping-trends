@@ -20,6 +20,7 @@ model Producto {
   imagen            String?
   categoria         String?
   activo            Boolean         @default(true)
+  creadoPorUsuario  Boolean         @default(false)
   creadoEn          DateTime        @default(now())
   actualizadoEn     DateTime        @updatedAt
   metricas          MetricaDiaria[]

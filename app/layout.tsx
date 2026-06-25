@@ -17,9 +17,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span>🔥</span> DropTrends
           </a>
           <div className="flex items-center gap-3">
-            <span className="text-xs px-3 py-1 rounded-full" style={{ background: "rgba(16,185,129,0.12)", color: "var(--green)" }}>
-              🟢 En vivo
-            </span>
+            <a href="/agregar" className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90"
+              style={{ background: "var(--accent)", color: "#fff" }}>
+              ➕ Agregar
+            </a>
             <ThemeToggle />
           </div>
         </header>
