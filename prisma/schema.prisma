@@ -29,6 +29,14 @@ model Producto {
   @@index([activo])
 }
 
+model HashtagSeguido {
+  id       String   @id @default(cuid())
+  hashtag  String   @unique
+  creadoEn DateTime @default(now())
+
+  @@index([creadoEn])
+}
+
 model TendenciaTikTok {
   id        String   @id @default(cuid())
   hashtag   String
