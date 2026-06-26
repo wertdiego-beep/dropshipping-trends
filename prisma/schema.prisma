@@ -33,7 +33,7 @@ model TendenciaTikTok {
   id        String   @id @default(cuid())
   hashtag   String
   posts     Int      @default(0)
-  vistas    Int      @default(0)
+  vistas    Float    @default(0)
   categoria String   @default("Trending")
   fecha     DateTime @default(now())
 
