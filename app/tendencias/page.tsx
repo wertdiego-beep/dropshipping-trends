@@ -27,6 +27,13 @@ function fmt(n: number) {
   return String(n);
 }
 
+// Hashtags clásicos de dropshipping (sugeridos para seguir)
+const SUGERIDOS = [
+  "TikTokMadeMeBuyIt", "TikTokmehizocomprarlo", "TikTokShopFinds", "AmazonFinds",
+  "ViralProducts", "ProductosVirales", "SmallBusinessCheck", "PackingOrders",
+  "PackOrders", "AmazonMustHaves", "GadgetsThatWork", "UsefulGadgets", "OddlySatisfying",
+];
+
 export default function TendenciasPage() {
   const [tendencias, setTendencias] = useState<Tendencia[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +76,19 @@ export default function TendenciasPage() {
     cargarSeguidos();
   }
 
+  async function agregarSugerido(hashtag: string) {
+    await fetch("/api/hashtags-seguidos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ hashtag }),
+    });
+    cargarSeguidos();
+  }
+
+  // Sugeridos que todavía no están en la lista del usuario
+  const seguidosSet = new Set(seguidos.map(s => s.hashtag.toLowerCase()));
+  const sugeridosDisponibles = SUGERIDOS.filter(s => !seguidosSet.has(s.toLowerCase()));
+
   const maxVistas = Math.max(...tendencias.map(t => t.vistas), 1);
 
   return (
@@ -105,6 +125,22 @@ export default function TendenciasPage() {
             Agregar
           </button>
         </form>
+
+        {/* Sugeridos de dropshipping */}
+        {sugeridosDisponibles.length > 0 && (
+          <div className="mb-3">
+            <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>Sugeridos para dropshipping (tocá para agregar):</p>
+            <div className="flex flex-wrap gap-1.5">
+              {sugeridosDisponibles.map(s => (
+                <button key={s} onClick={() => agregarSugerido(s)}
+                  className="text-xs px-2.5 py-1 rounded-full transition-opacity hover:opacity-80"
+                  style={{ background: "var(--bg-base)", border: "1px dashed var(--border)", color: "var(--text-muted)" }}>
+                  + #{s}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {seguidos.length === 0 ? (
           <p className="text-xs" style={{ color: "var(--text-muted)" }}>Todavía no seguís ningún hashtag.</p>
